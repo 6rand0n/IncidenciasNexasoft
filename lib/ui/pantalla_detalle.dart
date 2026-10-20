@@ -29,6 +29,21 @@ class _PantallaDetalleState extends State<PantallaDetalle> {
     }
   }
 
+  Future<void> cambiarPrioridad(PrioridadIncidencia? valor) async {
+    if (valor == null) return;
+    setState(() => guardando = true);
+    try {
+      await widget.gestor.cambiarPrioridad(widget.id, valor);
+      if (mounted) setState(() {});
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No se pudo guardar: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => guardando = false);
+    }
+  }
+
   Widget fila(String etiqueta, String valor) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
@@ -77,9 +92,20 @@ class _PantallaDetalleState extends State<PantallaDetalle> {
                           .toList(),
                       onChanged: guardando ? null : cambiar,
                     ),
-                    if (guardando) const Padding(
-                      padding: EdgeInsets.only(top: 12), child: LinearProgressIndicator(),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<PrioridadIncidencia>(
+                      value: item.prioridad,
+                      decoration: const InputDecoration(labelText: 'Prioridad', border: OutlineInputBorder()),
+                      items: PrioridadIncidencia.values
+                          .map((p) => DropdownMenuItem(value: p, child: Text(p.etiqueta)))
+                          .toList(),
+                      onChanged: guardando ? null : cambiarPrioridad,
                     ),
+                    if (guardando)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 12),
+                        child: LinearProgressIndicator(),
+                      ),
                     const SizedBox(height: 12),
                     const Text('Los cambios se reflejan al volver a la lista.',
                         style: TextStyle(color: Colors.black54)),

@@ -1,3 +1,20 @@
+enum PrioridadIncidencia {
+  baja('Baja'),
+  media('Media'),
+  alta('Alta');
+
+  const PrioridadIncidencia(this.etiqueta);
+
+  final String etiqueta;
+
+  static PrioridadIncidencia desdeJson(dynamic valor) {
+    return PrioridadIncidencia.values.firstWhere(
+      (prioridad) => prioridad.etiqueta == valor,
+      orElse: () => PrioridadIncidencia.media,
+    );
+  }
+}
+
 class Incidencia {
   String id;
   String titulo;
@@ -6,6 +23,7 @@ class Incidencia {
   String categoria;
   String estado;
   String fecha;
+  PrioridadIncidencia prioridad;
 
   Incidencia({
     required this.id,
@@ -15,6 +33,7 @@ class Incidencia {
     required this.categoria,
     required this.estado,
     required this.fecha,
+    this.prioridad = PrioridadIncidencia.media,
   });
 
   factory Incidencia.desdeJson(Map<String, dynamic> m) {
@@ -26,6 +45,7 @@ class Incidencia {
       categoria: m['categoria']?.toString() ?? 'Software',
       estado: m['estado']?.toString() ?? 'Pendiente',
       fecha: m['fecha']?.toString() ?? '',
+      prioridad: PrioridadIncidencia.desdeJson(m['prioridad']),
     );
   }
 
@@ -38,6 +58,7 @@ class Incidencia {
       'categoria': categoria,
       'estado': estado,
       'fecha': fecha,
+      'prioridad': prioridad.etiqueta,
     };
   }
 }
