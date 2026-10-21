@@ -13,14 +13,23 @@ class PantallaPrincipal extends StatefulWidget {
 
 class _PantallaPrincipalState extends State<PantallaPrincipal> {
   final GestorIncidencias g = GestorIncidencias();
+  final TextEditingController controladorBusqueda = TextEditingController();
   bool cargando = true;
   String? error;
   String busqueda = '';
+  String filtroEstado = 'Todos';
+  String filtroPrioridad = 'Todas';
 
   @override
   void initState() {
     super.initState();
     cargar();
+  }
+
+  @override
+  void dispose() {
+    controladorBusqueda.dispose();
+    super.dispose();
   }
 
   Future<void> cargar() async {
@@ -82,9 +91,25 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
     }
   }
 
+  void limpiarFiltros() {
+    controladorBusqueda.clear();
+    setState(() {
+      busqueda = '';
+      filtroEstado = 'Todos';
+      filtroPrioridad = 'Todas';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final items = g.buscar(busqueda);
+    final items = g.buscar(
+      busqueda,
+      estado: filtroEstado == 'Todos' ? null : filtroEstado,
+      prioridad: filtroPrioridad == 'Todas'
+          ? null
+          : PrioridadIncidencia.values
+              .firstWhere((prioridad) => prioridad.etiqueta == filtroPrioridad),
+    );
     return Scaffold(
       appBar: AppBar(
         title: const Text('NexaSoft | Incidencias'),
@@ -151,6 +176,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 5),
                           child: TextField(
+                            controller: controladorBusqueda,
                             decoration: const InputDecoration(
                               labelText: 'Buscar incidencias',
                               hintText: 'Ejemplo: WiFi, correo, pantalla',
@@ -158,6 +184,67 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                               border: OutlineInputBorder(),
                             ),
                             onChanged: (texto) => setState(() => busqueda = texto),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 5),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: filtroEstado,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Estado',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: const ['Todos', 'Pendiente', 'En proceso', 'Resuelta']
+                                      .map((estado) => DropdownMenuItem(
+                                            value: estado,
+                                            child: Text(estado),
+                                          ))
+                                      .toList(),
+                                  onChanged: (estado) {
+                                    if (estado != null) {
+                                      setState(() => filtroEstado = estado);
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: filtroPrioridad,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Prioridad',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: const ['Todas', 'Baja', 'Media', 'Alta']
+                                      .map((prioridad) => DropdownMenuItem(
+                                            value: prioridad,
+                                            child: Text(prioridad),
+                                          ))
+                                      .toList(),
+                                  onChanged: (prioridad) {
+                                    if (prioridad != null) {
+                                      setState(() => filtroPrioridad = prioridad);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 2),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton.icon(
+                              onPressed: limpiarFiltros,
+                              icon: const Icon(Icons.filter_alt_off),
+                              label: const Text('Limpiar búsqueda y filtros'),
+                            ),
                           ),
                         ),
                         Padding(
